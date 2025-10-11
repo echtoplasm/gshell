@@ -15,6 +15,52 @@ struct SystemInfo {
   double idle_seconds;
   float ram_percent;
   float cpu_percent;
+  std::string processorName;
+  std::string gpuName;
+
+  std::string getProcessorInfo() {
+    std::ifstream cpuinfo("/proc/cpuinfo");
+    std::string line;
+    std::string processorName;
+
+    while (std::getline(cpuinfo, line)) {
+      if (line.find("model name") != std::string::npos) {
+        size_t colonPos = line.find(':');
+        if (colonPos != std::string::npos) {
+          processorName = line.substr(colonPos + 2); // +2 to skip ": "
+        } else {
+          processorName = "Unknown CPU";
+        }
+      }
+    }
+    cpuinfo.close();
+    return processorName;
+  }
+
+  std::string getGpuName() {
+    std::string gpuPath =
+        R"(/proc/driver/nvidia/gpus/0000:01:00.0/information)";
+    std::ifstream gpuinfo(gpuPath);
+    std::string line;
+
+    while (std::getline(gpuinfo, line)) {
+      if (line.find("Model") != std::string::npos) {
+        size_t colonPos = line.find(':');
+        if (colonPos != std::string::npos) {
+          gpuName = line.substr(colonPos + 1);
+          size_t start = gpuName.find_first_not_of('\t');
+          if (start != std::string::npos) {
+            gpuName = gpuName.substr(start);
+            break;
+          } else {
+            gpuName = "Unknown GPU";
+          }
+        }
+      }
+    }
+    gpuinfo.close();
+    return gpuName;
+  }
 
   void update() {
     std::ifstream uptime("/proc/uptime");
@@ -34,8 +80,16 @@ struct SystemInfo {
           mem_available = value;
       }
     }
+    if (processorName.empty()) {
+      processorName = getProcessorInfo();
+    }
+
+    if (gpuName.empty()) {
+      gpuName = getGpuName();
+    }
 
     ram_percent = 100.0f * (1.0f - (float)mem_available / mem_total);
+    uptime.close();
   }
 
   std::string getUptimeString() const {
@@ -43,11 +97,12 @@ struct SystemInfo {
     unsigned long days = total / 86400;
     unsigned long hours = (total % 86400) / 3600;
     unsigned long minutes = (total % 3600) / 60;
+    unsigned long seconds = (total % 60);
 
     std::ostringstream oss;
     if (days > 0)
       oss << days << "d ";
-    oss << hours << "h " << minutes << "m";
+    oss << hours << "h " << minutes << "m " << seconds << "s";
     return oss.str();
   }
 };
@@ -69,12 +124,15 @@ int main() {
 
   KittyTerminalImg gifDisplay;
   gifDisplay.gifPath = "~/dev/gshell/giphy.gif";
-  gifDisplay.displayGif(50, 2, 40, 20);
+  gifDisplay.displayGif(53, 1, 40, 20);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  auto screen = ScreenInteractive::FixedSize(40, 25);
+  auto screen = ScreenInteractive::FixedSize(52, 20);
   SystemInfo info;
+
+  info.update();
+
   std::atomic<bool> running{true};
 
   std::thread update_thread([&] {
@@ -86,30 +144,33 @@ int main() {
   });
 
   auto component = Renderer([&] {
-    return
-
-        hbox({
-            text("") | size(WIDTH, EQUAL, 100),
-        }),
-
-        vbox({
-            text("System Monitor") | bold | color(Color::Cyan),
-            separatorLight(),
-            hbox({
-                text("Uptime: "),
-                text(info.getUptimeString()) | color(Color::Green),
-            }),
-            separatorLight(),
-            hbox({
-                text("RAM: ") | center,
-                border(gauge(info.ram_percent / 100.0f)) |
-                    color(Color::BlueLight) | size(WIDTH, EQUAL, 40),
-                text(" " + std::to_string(static_cast<int>(info.ram_percent)) +
-                     "%") |
-                    center,
-            }),
-            separatorLight(),
-        }) | border;
+    return vbox({text("System Monitor") | bold | color(Color::CyanLight),
+                 separatorLight(),
+                 hbox({
+                     text("Uptime: "),
+                     text(info.getUptimeString()) | color(Color::GreenLight),
+                 }),
+                 separatorLight(),
+                 hbox({
+                     text("RAM: ") | center,
+                     border(gauge(info.ram_percent / 100.0f)) |
+                         color(Color::BlueLight) | size(WIDTH, EQUAL, 40),
+                     text(" " +
+                          std::to_string(static_cast<int>(info.ram_percent)) +
+                          "%") |
+                         center,
+                 }),
+                 separatorLight(),
+                 hbox({
+                     text("Processor: "),
+                     text(info.processorName) | color(Color::MagentaLight),
+                 }),
+                 separatorLight(),
+                 hbox({
+                     text("GPU: "),
+                     text(info.gpuName) | color(Color::YellowLight),
+                 })}) |
+           border;
   });
   screen.Loop(component);
   running = false;
