@@ -1,11 +1,13 @@
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <fstream>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <thread>
 
 using namespace ftxui;
@@ -17,6 +19,26 @@ struct SystemInfo {
   float cpu_percent;
   std::string processorName;
   std::string gpuName;
+  std::string distroName;
+
+  std::string getDistroName() {
+    std::ifstream distroinfo("/etc/os-release");
+    std::string line;
+    std::string distroName;
+
+    while (std::getline(distroinfo, line)) {
+      if (line.find("PRETTY_NAME") != std::string::npos) {
+        size_t delimiter = line.find('=');
+        if (delimiter != std::string::npos) {
+          distroName = line.substr(delimiter + 1);
+        } else {
+          distroName = "Unknown Distro";
+        }
+      }
+    }
+    distroinfo.close();
+    return distroName;
+  }
 
   std::string getProcessorInfo() {
     std::ifstream cpuinfo("/proc/cpuinfo");
@@ -88,6 +110,10 @@ struct SystemInfo {
       gpuName = getGpuName();
     }
 
+    if (distroName.empty()) {
+      distroName = getDistroName();
+    }
+
     ram_percent = 100.0f * (1.0f - (float)mem_available / mem_total);
     uptime.close();
   }
@@ -143,33 +169,45 @@ int main() {
     }
   });
 
+  /**
+   * @brief 
+   */
   auto component = Renderer([&] {
-    return vbox({text("System Monitor") | bold | color(Color::CyanLight),
-                 separatorLight(),
-                 hbox({
-                     text("Uptime: "),
-                     text(info.getUptimeString()) | color(Color::GreenLight),
-                 }),
-                 separatorLight(),
-                 hbox({
-                     text("RAM: ") | center,
-                     border(gauge(info.ram_percent / 100.0f)) |
-                         color(Color::BlueLight) | size(WIDTH, EQUAL, 40),
-                     text(" " +
-                          std::to_string(static_cast<int>(info.ram_percent)) +
-                          "%") |
-                         center,
-                 }),
-                 separatorLight(),
-                 hbox({
-                     text("Processor: "),
-                     text(info.processorName) | color(Color::MagentaLight),
-                 }),
-                 separatorLight(),
-                 hbox({
-                     text("GPU: "),
-                     text(info.gpuName) | color(Color::YellowLight),
-                 })}) |
+    return vbox({
+               text("See you space cowboy") | bold | center | color(Color::MagentaLight),
+               separatorLight(),
+               hbox({
+                   text(info.distroName) | color(Color::CyanLight),
+
+               }),
+               separatorLight(),
+               hbox({
+                   text("Uptime: "),
+                   text(info.getUptimeString()) | color(Color::Cornsilk1),
+               }),
+               separatorLight(),
+
+               hbox({
+                   text("Processor: "),
+                   text(info.processorName) | color(Color::MagentaLight),
+               }),
+               separatorLight(),
+               hbox({
+                   text("GPU: "),
+                   text(info.gpuName) | color(Color::CyanLight),
+               }),
+                separatorLight(),
+                hbox({
+                   text("RAM: ") | center,
+                   border(gauge(info.ram_percent / 100.0f)) |
+                       color(Color::Cornsilk1) | size(WIDTH, EQUAL, 40),
+                   text(" " +
+                        std::to_string(static_cast<int>(info.ram_percent)) +
+                        "%") |
+                       center,
+               }),
+               separatorLight(),
+           }) |
            border;
   });
   screen.Loop(component);
