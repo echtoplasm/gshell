@@ -9,8 +9,10 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <map>
 
 #include "headers/SystemInfo.h"
+#include "headers/customization.h"
 
 using namespace ftxui;
 
@@ -39,6 +41,12 @@ int main() {
   
   SystemInfo info;
   info.update();
+  
+  Customization custom;
+  custom.getConfSettings();
+  custom.applySettings();
+
+
   std::atomic<bool> running{true};
   std::thread update_thread([&] {
     while (running) {
@@ -48,12 +56,9 @@ int main() {
     }
   });
 
-  /**
-   * @brief 
-   */
   auto component = Renderer([&] {
     return vbox({
-               text("See you space cowboy") | bold | center | color(Color::MagentaLight),
+      text(custom.tagline) | bold | center | color(Color::MagentaLight),
                separatorLight(),
                hbox({
                    text(info.distroName) | color(Color::CyanLight),

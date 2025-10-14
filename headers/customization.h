@@ -16,6 +16,9 @@ struct Customization {
   string gpuColor;
   string ramGaugeColor;
 
+  string defaultTagLine = "Gshell";
+  string defaultColor = "Magenta";
+
   std::map<string, string> confSettings = {{"tag_line", ""},
                                            {"uptime_color", ""},
                                            {"proc_color", ""},
@@ -31,7 +34,7 @@ struct Customization {
       }
     }
 
-    std::ifstream confile(confPath);
+    std::ifstream confile(expandedPath);
 
     if (!confile.is_open()) {
       return;
@@ -39,7 +42,7 @@ struct Customization {
 
     string line;
     while (std::getline(confile, line)) {
-      for (auto &[key, value] : confSettings) {
+      for (auto& [key, value] : confSettings) {
         if (line.find(key) != string::npos) {
           size_t delimiter = line.find('=');
           if (delimiter != string::npos) {
@@ -52,10 +55,35 @@ struct Customization {
   }
 
   void applySettings() {
+
     if (confSettings.at("tag_line").empty()) {
-      tagline = "System Monitor";
+      tagline = defaultTagLine;
     } else {
       tagline = confSettings.at("tag_line");
+    }
+
+    if (confSettings.at("uptime_color").empty()) {
+      uptimeColor = confSettings.at("uptime_color");
+    } else {
+      uptimeColor = defaultColor;
+    }
+
+    if (confSettings.at("proc_color").empty()) {
+      processorColor = confSettings.at("proc_color");
+    } else {
+      processorColor = defaultColor;
+    }
+
+    if (confSettings.at("gpu_color").empty()) {
+      gpuColor = confSettings.at("gpu_color");
+    } else {
+      gpuColor = defaultColor;
+    }
+
+    if (confSettings.at("ramgauge_color").empty()) {
+      ramGaugeColor = confSettings.at("ramgauge_color");
+    } else {
+      ramGaugeColor = defaultColor;
     }
   }
 };
