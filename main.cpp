@@ -35,6 +35,8 @@ int main() {
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   auto screen = ScreenInteractive::FixedSize(54, 20);
+  
+  
 
   SystemInfo info;
   info.update();
@@ -44,9 +46,11 @@ int main() {
 
   Customization custom;
   custom.getConfSettings();
-  custom.applySettings();
+  custom.applyUserConf();
 
   std::atomic<bool> running{true};
+
+
   std::thread update_thread([&] {
     while (running) {
       info.update();
@@ -63,36 +67,44 @@ int main() {
     }
   });
 
+  std::thread updateCustom([&] {
+    while(running){
+      custom.applyUserConf();
+      screen.Post(Event::Custom);
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+  });
+
   auto component = Renderer([&] {
     return vbox({
                text(custom.tagline) | bold | center |
                    color(Color::MagentaLight),
                separatorLight(),
                hbox({
-                   text(info.distroName) | color(Color::CyanLight),
+                   text(info.distroName) | color(Color::CyanLight) //CyanLight,
 
                 }),
                separatorLight(),
                hbox({
                    text("Uptime: "),
-                   text(info.getUptimeString()) | color(Color::Cornsilk1),
+                   text(info.getUptimeString()) | color(custom.uptimeColor), //Cornsilk1
                }),
                separatorLight(),
 
                hbox({
                    text("Processor: "),
-                   text(info.processorName) | color(Color::MagentaLight),
+                   text(info.processorName) | color(custom.processorColor), //MagentaLight
                }),
                separatorLight(),
                hbox({
                    text("GPU: "),
-                   text(info.gpuName) | color(Color::CyanLight),
+                   text(info.gpuName) | color(custom.gpuColor), //CyanLight
                }),
                separatorLight(),
                hbox({
                    text("RAMuse: ") | center,
                    border(gauge(info.ram_percent / 100.0f)) |
-                       color(Color::Cornsilk1) | size(WIDTH, EQUAL, 40),
+                       color(custom.ramGaugeColor) | size(WIDTH, EQUAL, 40), //Cornsilk1
                    text(" " +
                         std::to_string(static_cast<int>(info.ram_percent)) +
                         "%") |
@@ -102,7 +114,7 @@ int main() {
                hbox({
                    text("CPUtmp: ") | center,
                    border(gauge(thermal.tempC / 100.0f)) |
-                       color(Color::CyanLight) | size(WIDTH, EQUAL, 40),
+                       color(custom.cpuGaugeColor) | size(WIDTH, EQUAL, 40), //CyanLight
                    text(" " +
                         std::to_string(static_cast<int>(thermal.tempC)) +
                         "°C") |
@@ -115,7 +127,9 @@ int main() {
   running = false;
   update_thread.join();
   getTemp.join();
+  updateCustom.join();
 
   screen.TrackMouse(false);
   return 0;
 }
+
