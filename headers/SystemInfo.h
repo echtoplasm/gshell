@@ -81,12 +81,14 @@ struct SystemInfo {
     gpuinfo.close();
     return gpuName;
   }
+
   void update() {
     std::ifstream uptime("/proc/uptime");
     uptime >> uptime_seconds >> idle_seconds;
 
     std::ifstream meminfo("/proc/meminfo");
     unsigned long mem_total = 0, mem_available = 0;
+
     std::string line, key;
     unsigned long value;
 
@@ -99,6 +101,7 @@ struct SystemInfo {
           mem_available = value;
       }
     }
+
     if (processorName.empty()) {
       processorName = getProcessorInfo();
     }
@@ -112,7 +115,11 @@ struct SystemInfo {
     }
 
     ram_percent = 100.0f * (1.0f - (float)mem_available / mem_total);
+
+    std::ifstream cpuVals; // start here to calc cpuvals
+
     uptime.close();
+    meminfo.close();
   }
 
   std::string getUptimeString() const {

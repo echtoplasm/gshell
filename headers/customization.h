@@ -42,7 +42,7 @@ struct Customization {
 
     string line;
     while (std::getline(confile, line)) {
-      for (auto& [key, value] : confSettings) {
+      for (auto &[key, value] : confSettings) {
         if (line.find(key) != string::npos) {
           size_t delimiter = line.find('=');
           if (delimiter != string::npos) {

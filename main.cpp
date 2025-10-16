@@ -1,18 +1,15 @@
 #include <atomic>
 #include <chrono>
-#include <cstddef>
-#include <fstream>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <thread>
-#include <map>
 
 #include "headers/SystemInfo.h"
 #include "headers/customization.h"
+#include "headers/readThermal.h"
 
 using namespace ftxui;
 
@@ -30,22 +27,24 @@ struct KittyTerminalImg {
 
 int main() {
   system("clear");
- 
+
   KittyTerminalImg gifDisplay;
   gifDisplay.gifPath = "~/dev/gshell/giphy.gif";
-  gifDisplay.displayGif(53, 1, 40, 20);
+  gifDisplay.displayGif(55, 0, 40, 20);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  auto screen = ScreenInteractive::FixedSize(52, 20);
-  
+  auto screen = ScreenInteractive::FixedSize(54, 20);
+
   SystemInfo info;
   info.update();
-  
+
+  Thermal thermal;
+  thermal.getTemp0();
+
   Customization custom;
   custom.getConfSettings();
   custom.applySettings();
-
 
   std::atomic<bool> running{true};
   std::thread update_thread([&] {
@@ -56,14 +55,23 @@ int main() {
     }
   });
 
+  std::thread getTemp([&] {
+    while(running){
+      thermal.getTemp0();
+      screen.Post(Event::Custom);
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  });
+
   auto component = Renderer([&] {
     return vbox({
-      text(custom.tagline) | bold | center | color(Color::MagentaLight),
+               text(custom.tagline) | bold | center |
+                   color(Color::MagentaLight),
                separatorLight(),
                hbox({
                    text(info.distroName) | color(Color::CyanLight),
 
-               }),
+                }),
                separatorLight(),
                hbox({
                    text("Uptime: "),
@@ -80,9 +88,9 @@ int main() {
                    text("GPU: "),
                    text(info.gpuName) | color(Color::CyanLight),
                }),
-                separatorLight(),
-                hbox({
-                   text("RAM: ") | center,
+               separatorLight(),
+               hbox({
+                   text("RAMuse: ") | center,
                    border(gauge(info.ram_percent / 100.0f)) |
                        color(Color::Cornsilk1) | size(WIDTH, EQUAL, 40),
                    text(" " +
@@ -90,13 +98,24 @@ int main() {
                         "%") |
                        center,
                }),
-               separatorLight(),
+
+               hbox({
+                   text("CPUtmp: ") | center,
+                   border(gauge(thermal.tempC / 100.0f)) |
+                       color(Color::CyanLight) | size(WIDTH, EQUAL, 40),
+                   text(" " +
+                        std::to_string(static_cast<int>(thermal.tempC)) +
+                        "°C") |
+                       center,
+               }),
            }) |
            border;
   });
   screen.Loop(component);
   running = false;
   update_thread.join();
+  getTemp.join();
+
   screen.TrackMouse(false);
   return 0;
 }
