@@ -30,11 +30,11 @@ int main() {
 
   KittyTerminalImg gifDisplay;
   gifDisplay.gifPath = "~/dev/gshell/giphy.gif";
-  gifDisplay.displayGif(55, 0, 40, 20);
+  gifDisplay.displayGif(56, 1, 40, 20);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  auto screen = ScreenInteractive::FixedSize(54, 20);
+  auto screen = ScreenInteractive::FixedSize(56, 20);
   
   
 
@@ -81,13 +81,13 @@ int main() {
                    color(Color::MagentaLight),
                separatorLight(),
                hbox({
-                   text(info.distroName) | color(Color::CyanLight) //CyanLight,
+                   text(info.distroName) | color(Color::CyanLight)
 
                 }),
                separatorLight(),
                hbox({
                    text("Uptime: "),
-                   text(info.getUptimeString()) | color(custom.uptimeColor), //Cornsilk1
+                   text(info.getUptimeString()) | color(custom.uptimeColor),
                }),
                separatorLight(),
 
@@ -104,7 +104,7 @@ int main() {
                hbox({
                    text("RAMuse: ") | center,
                    border(gauge(info.ram_percent / 100.0f)) |
-                       color(custom.ramGaugeColor) | size(WIDTH, EQUAL, 40), //Cornsilk1
+                       color(custom.ramGaugeColor) | size(WIDTH, EQUAL, 40),
                    text(" " +
                         std::to_string(static_cast<int>(info.ram_percent)) +
                         "%") |
@@ -114,7 +114,7 @@ int main() {
                hbox({
                    text("CPUtmp: ") | center,
                    border(gauge(thermal.tempC / 100.0f)) |
-                       color(custom.cpuGaugeColor) | size(WIDTH, EQUAL, 40), //CyanLight
+                       color(custom.cpuGaugeColor) | size(WIDTH, EQUAL, 40),
                    text(" " +
                         std::to_string(static_cast<int>(thermal.tempC)) +
                         "°C") |
