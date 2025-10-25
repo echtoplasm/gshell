@@ -20,8 +20,8 @@ struct Customization {
 
   string confPath = "~/.config/gshell/config.conf";
   string tagline;
-  ftxui::Color uptimeColor, processorColor, gpuColor, ramGaugeColor,
-      cpuGaugeColor;
+  ftxui::Color taglineColor, distroColor, uptimeColor, processorColor, gpuColor,
+      ramGaugeColor, cpuGaugeColor;
 
   string defaultTagLine = "Gshell";
   ftxui::Color defaultColor = ftxui::Color::Magenta;
@@ -29,8 +29,9 @@ struct Customization {
   // map has been init'd with empty strings to allow for user defined
   // colors in the values
   std::map<string, string> confSettings = {
-      {"tag_line", ""},  {"uptime_color", ""},   {"proc_color", ""},
-      {"gpu_color", ""}, {"ramgauge_color", ""}, {"cpugauge_color", ""}};
+      {"tag_line", ""},       {"distro_color", ""},  {"color_tl", ""},
+      {"uptime_color", ""},   {"proc_color", ""},    {"gpu_color", ""},
+      {"ramgauge_color", ""}, {"cpugauge_color", ""}};
 
   // color lookup map, the map is defined outside the struct
   static const std::unordered_map<std::string, ftxui::Color> colorMap;
@@ -85,6 +86,8 @@ struct Customization {
 
     // mapping config keys to color properties using lambdas
     std::map<string, std::function<void(ftxui::Color)>> colorSetters = {
+        {"color_tl", [this](ftxui::Color c) { taglineColor = c; }},
+        {"distro_color", [this](ftxui::Color c) { distroColor = c; }},
         {"uptime_color", [this](ftxui::Color c) { uptimeColor = c; }},
         {"proc_color", [this](ftxui::Color c) { processorColor = c; }},
         {"gpu_color", [this](ftxui::Color c) { gpuColor = c; }},

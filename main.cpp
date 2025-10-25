@@ -35,8 +35,6 @@ int main() {
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   auto screen = ScreenInteractive::FixedSize(56, 20);
-  
-  
 
   SystemInfo info;
   info.update();
@@ -50,7 +48,6 @@ int main() {
 
   std::atomic<bool> running{true};
 
-
   std::thread update_thread([&] {
     while (running) {
       info.update();
@@ -60,7 +57,7 @@ int main() {
   });
 
   std::thread getTemp([&] {
-    while(running){
+    while (running) {
       thermal.getTemp0();
       screen.Post(Event::Custom);
       std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -68,7 +65,7 @@ int main() {
   });
 
   std::thread updateCustom([&] {
-    while(running){
+    while (running) {
       custom.applyUserConf();
       screen.Post(Event::Custom);
       std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -78,12 +75,11 @@ int main() {
   auto component = Renderer([&] {
     return vbox({
                text(custom.tagline) | bold | center |
-                   color(Color::MagentaLight),
+                   color(custom.taglineColor),
                separatorLight(),
-               hbox({
-                   text(info.distroName) | color(Color::CyanLight)
+               hbox({text(info.distroName) | color(custom.distroColor),
 
-                }),
+               }),
                separatorLight(),
                hbox({
                    text("Uptime: "),
@@ -93,12 +89,13 @@ int main() {
 
                hbox({
                    text("Processor: "),
-                   text(info.processorName) | color(custom.processorColor), //MagentaLight
+                   text(info.processorName) |
+                       color(custom.processorColor), // MagentaLight
                }),
                separatorLight(),
                hbox({
                    text("GPU: "),
-                   text(info.gpuName) | color(custom.gpuColor), //CyanLight
+                   text(info.gpuName) | color(custom.gpuColor), // CyanLight
                }),
                separatorLight(),
                hbox({
@@ -115,8 +112,7 @@ int main() {
                    text("CPUtmp: ") | center,
                    border(gauge(thermal.tempC / 100.0f)) |
                        color(custom.cpuGaugeColor) | size(WIDTH, EQUAL, 40),
-                   text(" " +
-                        std::to_string(static_cast<int>(thermal.tempC)) +
+                   text(" " + std::to_string(static_cast<int>(thermal.tempC)) +
                         "°C") |
                        center,
                }),
@@ -132,4 +128,3 @@ int main() {
   screen.TrackMouse(false);
   return 0;
 }
-
