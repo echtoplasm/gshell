@@ -3,52 +3,48 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
-#include <iostream>
 #include <string>
 #include <thread>
 
 #include "headers/SystemInfo.h"
 #include "headers/customization.h"
+#include "headers/kittyTerminal.h"
 #include "headers/readThermal.h"
-
 using namespace ftxui;
 
-struct KittyTerminalImg {
-  std::string gifPath;
-
-  void displayGif(int x, int y, int width, int height) {
-    std::cout << "\033[" << y << ";" << x << "H";
-    std::string cmd = "kitty +kitten icat --place " + std::to_string(width) +
-                      "x" + std::to_string(height) + "@" + std::to_string(x) +
-                      "x" + std::to_string(y) + " " + gifPath;
-    system(cmd.c_str());
-  }
-};
+std::string KittyTerminalImg::gifPath = "";
 
 int main() {
   system("clear");
 
+  // kittyTerminal.h struct
   KittyTerminalImg gifDisplay;
-  gifDisplay.gifPath = "~/dev/gshell/giphy.gif";
-  gifDisplay.displayGif(56, 1, 40, 20);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-  auto screen = ScreenInteractive::FixedSize(56, 20);
-
+  // systeminfo.h struct
   SystemInfo info;
   info.update();
 
+  // readThermal.h struct
   Thermal thermal;
   thermal.getTemp0();
 
+  // customization.h struct
   Customization custom;
   custom.ensureConfigExists();
   custom.getConfSettings();
   custom.applyUserConf();
+  custom.applyKittyTermConf();
 
+  // Frontend gif rendering
+  // and ftxui screen render
+  gifDisplay.displayGif(56, 1, 40, 20);
+  auto screen = ScreenInteractive::FixedSize(56, 20);
+
+  // program clock
   std::atomic<bool> running{true};
 
+  // thread for calling systeminfo.h update
+  // in one second intervals
   std::thread update_thread([&] {
     while (running) {
       info.update();
@@ -57,6 +53,8 @@ int main() {
     }
   });
 
+  // thread for calling thermal.h getTemp0
+  // one second intervals
   std::thread getTemp([&] {
     while (running) {
       thermal.getTemp0();
@@ -65,6 +63,8 @@ int main() {
     }
   });
 
+  // thread for applying customization.h userConf
+  // 2 second intervals
   std::thread updateCustom([&] {
     while (running) {
       custom.applyUserConf();
@@ -73,6 +73,7 @@ int main() {
     }
   });
 
+  // FTXUI renderer component
   auto component = Renderer([&] {
     return vbox({
                text(custom.tagline) | bold | center |
@@ -91,13 +92,12 @@ int main() {
 
                hbox({
                    text("Processor: "),
-                   text(info.processorName) |
-                       color(custom.processorColor), // MagentaLight
+                   text(info.processorName) | color(custom.processorColor),
                }),
                separatorLight(),
                hbox({
                    text("GPU: "),
-                   text(info.gpuName) | color(custom.gpuColor), // CyanLight
+                   text(info.gpuName) | color(custom.gpuColor),
                }),
                separatorLight(),
                hbox({

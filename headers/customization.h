@@ -10,6 +10,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "kittyTerminal.h"
+
 using std::string;
 
 struct Customization {
@@ -30,9 +32,9 @@ struct Customization {
   // map has been init'd with empty strings to allow for user defined
   // colors in the values
   std::map<string, string> confSettings = {
-      {"tag_line", ""},       {"distro_color", ""},  {"color_tl", ""},
-      {"uptime_color", ""},   {"proc_color", ""},    {"gpu_color", ""},
-      {"ramgauge_color", ""}, {"cpugauge_color", ""}};
+      {"tag_line", ""},       {"distro_color", ""},   {"color_tl", ""},
+      {"uptime_color", ""},   {"proc_color", ""},     {"gpu_color", ""},
+      {"ramgauge_color", ""}, {"cpugauge_color", ""}, {"gif_path", ""}};
 
   // color lookup map, the map is defined outside the struct
   static const std::unordered_map<std::string, ftxui::Color> colorMap;
@@ -86,19 +88,42 @@ struct Customization {
     file.close();
   }
 
-  std::string getDefaultConfigContent() {
-    return R"(# gshell configuration file
-              # Documentation: https://github.com/echtoplasm/gshell
-              tag_line = gshell 
-              color_tl = CyanLight
-              uptime_color = Green
-              proc_color = Blue
-              gpu_color = Magenta
-              ramgauge_color = BlueLight
-              cpugauge_color = GreenLight
-              )";
-  }
+    std::string getDefaultConfigContent() {
+    return
+        R"(# gshell configuration file
+# Documentation: https://github.com/echtoplasm/gshell
 
+# Available colors:
+# Cyan: CyanLight, Cyan, CyanDark
+# Magenta: MagentaLight, Magenta, MagentaDark
+# Blue: BlueLight, Blue, BlueDark
+# Green: GreenLight, Green, GreenDark
+# Pink: PinkLight, Pink
+# Red: RedLight, Red, RedDark
+# Yellow: YellowLight, Yellow, YellowDark
+# Orange: Orange, OrangeRed
+# Purple: PurpleLight, Purple, PurpleDark
+# Grayscale: White, GrayLight, Gray, GrayDark, Black
+# Special: Gold, Coral, Turquoise, Salmon, Aquamarine
+
+# Tagline text at the top (default: gshell)
+tag_line = gshell 
+# Tagline color
+color_tl = CyanLight
+# Uptime display color
+uptime_color = Green
+# Processor info color
+proc_color = Blue
+# GPU info color
+gpu_color = Magenta
+# RAM gauge color
+ramgauge_color = BlueLight
+# CPU gauge color
+cpugauge_color = GreenLight
+# Path to GIF file for display (optional but recommended, use absolute path)
+gif_path = 
+)";
+}
   void applyUserConf() {
     // setting the tagline color
     tagline = confSettings["tag_line"].empty() ? defaultTagLine
@@ -121,6 +146,10 @@ struct Customization {
           colorStr.empty() ? defaultColor : parseColor(colorStr);
       setter(color);
     }
+  }
+
+  void applyKittyTermConf() {
+    KittyTerminalImg::gifPath = confSettings["gif_path"];
   }
 
   void ensureConfigExists() {
