@@ -43,6 +43,7 @@ int main() {
   thermal.getTemp0();
 
   Customization custom;
+  custom.ensureConfigExists();
   custom.getConfSettings();
   custom.applyUserConf();
 
@@ -77,7 +78,8 @@ int main() {
                text(custom.tagline) | bold | center |
                    color(custom.taglineColor),
                separatorLight(),
-               hbox({text(info.distroName) | color(custom.distroColor),
+               hbox({
+                   text(info.distroName) | color(custom.distroColor),
 
                }),
                separatorLight(),

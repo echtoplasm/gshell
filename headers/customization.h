@@ -2,6 +2,7 @@
 #define CUSTOM_H
 #include "debug.h"
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <ftxui/screen/color.hpp>
 #include <functional>
@@ -79,6 +80,25 @@ struct Customization {
     return (it != colorMap.end()) ? it->second : defaultColor;
   }
 
+  void createDefaultConfig(const std::string &path) {
+    std::ofstream file(path);
+    file << getDefaultConfigContent();
+    file.close();
+  }
+
+  std::string getDefaultConfigContent() {
+    return R"(# gshell configuration file
+              # Documentation: https://github.com/echtoplasm/gshell
+              tag_line = gshell 
+              color_tl = CyanLight
+              uptime_color = Green
+              proc_color = Blue
+              gpu_color = Magenta
+              ramgauge_color = BlueLight
+              cpugauge_color = GreenLight
+              )";
+  }
+
   void applyUserConf() {
     // setting the tagline color
     tagline = confSettings["tag_line"].empty() ? defaultTagLine
@@ -102,21 +122,77 @@ struct Customization {
       setter(color);
     }
   }
+
+  void ensureConfigExists() {
+    std::string homeDir = getenv("HOME");
+    std::string configDir = homeDir + "/.config/gshell";
+    std::string configPath = configDir + "/config.conf";
+    if (std::filesystem::exists(configPath)) {
+      return;
+    }
+    std::filesystem::create_directories(configDir);
+    createDefaultConfig(configPath);
+  }
 };
 
 // color map for property comparisons, this can be expanded for more colors
 inline const std::unordered_map<std::string, ftxui::Color>
-    Customization::colorMap = {{"CyanLight", ftxui::Color::CyanLight},
-                               {"CyanDark", ftxui::Color::DarkCyan},
-                               {"MagentaLight", ftxui::Color::MagentaLight},
-                               {"Magenta", ftxui::Color::Magenta},
-                               {"BlueLight", ftxui::Color::BlueLight},
-                               {"Blue", ftxui::Color::Blue},
-                               {"GreenLight", ftxui::Color::GreenLight},
-                               {"Green", ftxui::Color::Green},
-                               {"PinkLight", ftxui::Color::LightPink1},
-                               {"Pink", ftxui::Color::Pink1},
-                               {"RedLight", ftxui::Color::RedLight},
-                               {"Red", ftxui::Color::Red}};
+    Customization::colorMap = {
+        // Cyan variants
+        {"CyanLight", ftxui::Color::CyanLight},
+        {"Cyan", ftxui::Color::Cyan},
+        {"CyanDark", ftxui::Color::DarkCyan},
+
+        // Magenta variants
+        {"MagentaLight", ftxui::Color::MagentaLight},
+        {"Magenta", ftxui::Color::Magenta},
+        {"MagentaDark", ftxui::Color::DarkMagenta},
+
+        // Blue variants
+        {"BlueLight", ftxui::Color::BlueLight},
+        {"Blue", ftxui::Color::Blue},
+        {"BlueDark", ftxui::Color::DarkBlue},
+
+        // Green variants
+        {"GreenLight", ftxui::Color::GreenLight},
+        {"Green", ftxui::Color::Green},
+        {"GreenDark", ftxui::Color::DarkGreen},
+
+        // Pink variants
+        {"PinkLight", ftxui::Color::LightPink1},
+        {"Pink", ftxui::Color::Pink1},
+
+        // Red variants
+        {"RedLight", ftxui::Color::RedLight},
+        {"Red", ftxui::Color::Red},
+        {"RedDark", ftxui::Color::DarkRed},
+
+        // Yellow variants
+        {"YellowLight", ftxui::Color::YellowLight},
+        {"Yellow", ftxui::Color::Yellow},
+        {"YellowDark", ftxui::Color::DarkOrange},
+
+        // Orange variants
+        {"Orange", ftxui::Color::Orange1},
+        {"OrangeRed", ftxui::Color::OrangeRed1},
+
+        // Purple variants
+        {"Purple", ftxui::Color::Purple},
+        {"PurpleLight", ftxui::Color::Violet},
+        {"PurpleDark", ftxui::Color::DarkViolet},
+
+        // Grayscale
+        {"White", ftxui::Color::White},
+        {"GrayLight", ftxui::Color::GrayLight},
+        {"Gray", ftxui::Color::GrayDark},
+        {"GrayDark", ftxui::Color::GrayDark},
+        {"Black", ftxui::Color::Black},
+
+        // Special colors
+        {"Gold", ftxui::Color::Gold1},
+        {"Coral", ftxui::Color::LightCoral},
+        {"Turquoise", ftxui::Color::Turquoise2},
+        {"Salmon", ftxui::Color::Salmon1},
+        {"Aquamarine", ftxui::Color::Aquamarine1}};
 
 #endif // CUSTOM_H
