@@ -1,55 +1,96 @@
-# gshell - System Monitor TUI
+# gshell
 
-A lightweight terminal-based system monitor with anime flair. Because why should system monitoring be boring?
-
-## About
-
-A practice project for learning multi-threaded C++ systems programming while building something actually fun to look at. Combines real-time system stats with Kitty terminal graphics for that classic r/unixporn aesthetic.
+A lightweight, customizable terminal system monitor for Kitty with GIF support.
 
 ## Features
 
-- Real-time system statistics (RAM usage, uptime)
-- Kitty terminal graphics integration - display GIFs alongside your stats
-- Multi-threaded architecture for smooth updates
-- Clean TUI built with FTXUI
-- Reads directly from `/proc` filesystem
+- **Real-time system monitoring** - CPU, RAM, GPU temperature, and uptime tracking
+- **Kitty graphics integration** - Display custom GIFs directly in your terminal
+- **Highly customizable** - Color schemes, display options, and personalization via config file
+- **Lightweight & efficient** - Multi-threaded C++ implementation with minimal resource usage
+- **Direct `/proc` filesystem access** - No external dependencies for system stats
 
-## Prerequisites
+## Installation
 
-- **Kitty terminal** (for image rendering)
-- **FTXUI library**
-- **CMake** (3.10+)
-- **C++17 compiler**
-
-## Building
+### From AUR (Arch Linux)
 
 ```bash
-# Configure
-cmake -B build
-
-# Build
-cmake --build build -j
-
-# Run
-./build/gshell
+yay -S gshell
+# or
+paru -S gshell
 ```
 
-## What I Learned
+### Building from Source
 
-- Multi-threaded programming with atomics and synchronization
-- Parsing Linux `/proc` filesystem data
-- Working with terminal graphics protocols
-- Building responsive TUIs
-- Real-time data updates without blocking
+**Prerequisites:**
+- Kitty terminal
+- FTXUI library
+- CMake 3.10+
+- C++17 compatible compiler
 
-## Customization
-
-Drop your own GIF in and change the path in `main.cpp`:
-
-```cpp
-gifDisplay.gifPath = "your-waifu-here.gif";
+```bash
+git clone https://github.com/echtoplasm/gshell.git
+cd gshell
+mkdir build && cd build
+cmake ..
+make
+sudo make install
 ```
+
+## Usage
+
+Simply run:
+```bash
+gshell
+```
+
+On first run, a default configuration file will be created at `~/.config/gshell/config.conf`.
+
+## Configuration
+
+Edit `~/.config/gshell/config.conf` to customize your setup:
+
+```ini
+# gshell configuration file
+tag_line = gshell
+color_tl = CyanLight
+uptime_color = Green
+proc_color = Blue
+gpu_color = Magenta
+ramgauge_color = BlueLight
+cpugauge_color = GreenLight
+```
+
+### Available Colors
+
+Cyan, Blue, Green, Red, Yellow, Magenta, Purple, Orange, Pink, Gold, Coral, Turquoise, Salmon, Aquamarine, White, Gray, Black (each with Light/Dark variants where applicable)
+
+### Custom GIFs
+
+Place your custom GIF at `~/.config/gshell/custom.gif` or specify a custom path in the config file.
+
+## Documentation
+
+For more information, see:
+```bash
+man gshell
+```
+
+Or visit the [GitHub repository](https://github.com/echtoplasm/gshell).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Requirements
+
+- **Kitty terminal** - Required for GIF rendering support
+- Linux system with `/proc` filesystem
 
 ---
 
-*A learning project for systems programming fundamentals (and showing off your terminal setup)*
+*Perfect for ricing your setup*
